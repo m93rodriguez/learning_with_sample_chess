@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy
 import numpy as np
 
 
@@ -23,6 +24,10 @@ class Piece:
         self.has_moved = True
         self.visual.set_x(new_position[0])
         self.visual.set_y(new_position[1])
+
+    def gets_eaten(self):
+        self.visual.remove()
+        del self
 
     @staticmethod
     def moves_inside_board(moves):
@@ -112,7 +117,7 @@ class Knight(Piece):
 
 class Bishop(Piece):
     def __init__(self, coords, team):
-        self.type = 'Knight'
+        self.type = 'Bishop'
         Piece.__init__(self, coords, team)
         self.visual.set_text('B')
 
@@ -171,6 +176,7 @@ class Team:
             'Queen': [Queen(coords=np.array([cnt, back_row]), team=team_index) for cnt in [4]],
             'King': [King(coords=np.array([cnt, back_row]), team=team_index) for cnt in [3]],
         }
+        (self.piece_positions, self.piece_list) = self.list_pieces()
 
     def list_pieces(self):
 
@@ -183,3 +189,17 @@ class Team:
                 piece_id.append([piece.type, current_piece])
                 current_piece = current_piece + 1
         return np.array(piece_positions), piece_id
+
+    def move_piece(self, piece_ind, position, foe):
+        if foe.piece_positions.size > 0:
+            conflict_piece = (foe.piece_positions == position).all(1)
+            if any(conflict_piece):
+                eaten_piece_ind = numpy.nonzero(conflict_piece)
+                foe.eat_piece(eaten_piece_ind[0][0])
+        self.Pieces[self.piece_list[piece_ind][0]][self.piece_list[piece_ind][1]].move(position)
+        self.piece_positions = self.piece_list[0]
+
+    def eat_piece(self, piece_ind):
+        self.Pieces[self.piece_list[piece_ind][0]][self.piece_list[piece_ind][1]].gets_eaten()
+        del self.Pieces[self.piece_list[piece_ind][0]][self.piece_list[piece_ind][1]]
+        self.piece_positions, self.piece_list = self.list_pieces()

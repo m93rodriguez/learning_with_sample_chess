@@ -12,18 +12,28 @@ for row in range(board_size):
     for col in range(board_size):
         board_color[row, col] = np.mod(row + col, 2)
 
-plt.imshow(board_color, cmap='Greys')
+fig, ax = plt.subplots()
 
+plt.imshow(board_color, cmap='Greys')
 
 player = [Team(0, 1, 1), Team(7, 6, -1)]
 
-player[0].Pieces['Knight'][0].move([3, 5])
+plt.ioff()
 
-test = player[0].Pieces['Knight'][0].movement_range(player[0].list_pieces()[0], player[1].list_pieces()[0])
-print(test)
 
-plt.plot(test[:,0], test[:,1],'xr')
+def onclick(event):
+    position = [np.round(event.xdata), np.round(event.ydata)]
+    player[0].move_piece(0, position, player[1])
+    plt.draw()
+    print(player[1].piece_positions.size)
+
+
+cid = fig.canvas.mpl_connect('button_press_event', onclick)
+
 plt.show()
+
+
+
 
 
 
