@@ -2,6 +2,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from Piece import Pawn, Rook, Knight, Bishop, Queen, King, Team
 
 board_size = 8
 
@@ -11,23 +12,21 @@ for row in range(board_size):
     for col in range(board_size):
         board_color[row, col] = np.mod(row + col, 2)
 
-plt.imshow(board_color,cmap='Greys')
-dot = plt.plot([3], [4], 'ro')
-
-plt.pause(1)
-
-for rep in range(5):
-    new_coords = input("Enter coordinates:")
-    new_coords = np.fromstring(new_coords, dtype=int, sep=',')
-    dot[0].set_xdata([new_coords[0]])
-    dot[0].set_ydata([new_coords[1]])
-    plt.pause(1)
-
-new_coords = input("Enter coordinates:")
+plt.imshow(board_color, cmap='Greys')
 
 
-while False:
+player = [Team(0, 1, 1), Team(7, 6, -1)]
 
-    dot[0].set_xdata(new_coords[0])
-    dot[0].set_ydata(new_coords[1])
+player[0].Pieces['Knight'][0].move([3, 5])
+
+test = player[0].Pieces['Knight'][0].movement_range(player[0].list_pieces()[0], player[1].list_pieces()[0])
+print(test)
+
+plt.plot(test[:,0], test[:,1],'xr')
+plt.show()
+
+
+
+
+
 
