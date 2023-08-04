@@ -50,17 +50,36 @@ class Pawn(Piece):
         self.visual.set_text('P')
 
     def attack_cases(self, allies, foes):
-        reachable = np.array([[x, self.y_step] for x in [-1, 1]]) + self.position
-        return self.moves_inside_board(reachable)
+        reachable = []
+        for direction in [-1, 1]:
+            test_pos = self.position + np.array([direction, self.y_step])
+            if (test_pos == foes).all(1).any():
+                reachable.append(test_pos)
+        return np.array(reachable)
 
     def movement_range(self, allies, foes):
 
-        forward_move = self.moves_inside_board(self.position + np.array([[0, self.y_step]]))
+        reachable = []
 
-        if not self.has_moved:
-            forward_move = np.append(forward_move, np.array([[0, 2*self.y_step]]) + self.position, axis=0)
+        for mag in [1, 2]:
+            forward_move = self.position + np.array([0, mag*self.y_step])
 
-        return np.append(forward_move, self.attack_cases(allies, foes), axis=0)
+            if ((forward_move == allies).all(1).any() or (forward_move == foes).all(1).any() or
+                    not self.is_inside_board(forward_move)):
+                break
+            reachable.append(forward_move)
+            if self.has_moved:
+                break
+        reachable = np.array(reachable)
+        side_move = self.attack_cases(allies, foes)
+
+        if reachable.size == 0:
+            return side_move
+
+        if side_move.size == 0:
+            return reachable
+        else:
+            return np.append(reachable, side_move, axis=0)
 
 
 class Rook(Piece):
@@ -149,8 +168,13 @@ class Queen(Piece):
         self.visual.set_text('Q')
 
     def movement_range(self, allies, foes):
-        return np.append(Rook.attack_cases(self.position, allies, foes),
-                         Bishop.attack_cases(self.position, allies, foes), axis=0)
+        reachable_rook = Rook.attack_cases(self.position, allies, foes)
+        reachable_bishop = Bishop.attack_cases(self.position, allies, foes)
+        if reachable_rook.size == 0:
+            return reachable_bishop
+        if reachable_bishop.size == 0:
+            return reachable_rook
+        return np.append(reachable_rook, reachable_bishop, axis=0)
 
 
 class King(Piece):
@@ -197,7 +221,7 @@ class Team:
                 eaten_piece_ind = numpy.nonzero(conflict_piece)
                 foe.eat_piece(eaten_piece_ind[0][0])
         self.Pieces[self.piece_list[piece_ind][0]][self.piece_list[piece_ind][1]].move(position)
-        self.piece_positions = self.piece_list[0]
+        self.piece_positions = self.list_pieces()[0]
 
     def eat_piece(self, piece_ind):
         self.Pieces[self.piece_list[piece_ind][0]][self.piece_list[piece_ind][1]].gets_eaten()
